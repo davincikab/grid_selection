@@ -15,7 +15,7 @@
             font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
         }
 
-        .contianer {
+        .container {
             width: 100%;
             height: 100vh;
         }
@@ -24,6 +24,22 @@
             width: 100vw;
             height: 100vh;
             background:#ddd;
+        }
+
+        .selection-control.compress {
+            width: 20px;
+            height: 20px;
+            overflow:hidden;
+        }
+
+        .selection-control.compress .info-toggler {
+            top: 0%;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            width: auto;
+            height: auto;
+            background-color: white;
         }
 
         .selection-control  {
@@ -39,6 +55,7 @@
             font-weight: 600;
             padding:0.25em;
             padding:0.5rem;
+            transition: 0.5s width;
         }
 
         .info-toggler {
@@ -177,11 +194,14 @@
 <body>
     <div class="container">
         <div class="map" id="map"></div>
-        <div class="selection-control">
+        <div class="selection-control" id="selection-control">
 
-            <div class="info-toggler">
-                <i class="fa fa-expand-alt"></i>
+            <div class="info-toggler" id="info-toggler">
+                <span id="toggler-icon">
+                    <i class="fa fa-compress-alt" id="toggler-icon"></i>
+                </span>
             </div>
+
             <div class="info-item">
                 <span>
                     <i class="fa fa-map-marked"></i>

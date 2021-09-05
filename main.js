@@ -1,7 +1,11 @@
+
+var selectionControl = document.getElementById("selection-control");
 var collapseToggler = document.getElementById("toggle-collapse");
 var collapseContainer = document.getElementById("collapse-container");
 var countDiv = document.getElementById("count-div");
 var totalPrice = document.getElementById("total-price");
+var toggleIcon = document.getElementById("toggler-icon");
+var togglerButton = document.getElementById("info-toggler");
 
 collapseToggler.onclick = function(e) {
     collapseContainer.classList.toggle('open');
@@ -215,4 +219,15 @@ clearSelection.onclick = function(e) {
      // update the selection control
      updateSelectionCount(features);
      updateCollapseItems(features);
+}
+
+// toggle the selection control
+togglerButton.onclick = function(e) {
+    if(selectionControl.classList.contains('compress')) {
+        selectionControl.classList.remove('compress');
+        toggleIcon.innerHTML = '<i class="fa fa-compress-alt"></i>'
+    } else {
+        selectionControl.classList.add('compress');
+        toggleIcon.innerHTML = '<i class="fa fa-expand-alt"></i>'
+    }
 }
