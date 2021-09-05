@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GRID SELECTION</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" integrity="sha512-1ycn6IcaQQ40/MKBW2W4Rhis/DbILU74C1vSrLJxCq57o941Ym01SwNsOMqvEBFlcgUa6xLiPY/NS5R+E6ztJQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link href="https://api.mapbox.com/mapbox-gl-js/v2.3.1/mapbox-gl.css" rel="stylesheet">
+    <style>
+        body {
+            padding: 0;
+            margin:0;
+            font-size: 16px;
+            font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+        }
+
+        .contianer {
+            width: 100%;
+            height: 100vh;
+        }
+        
+        .map {
+            width: 100vw;
+            height: 100vh;
+            background:#ddd;
+        }
+
+        .selection-control  {
+            position:absolute;
+            top:1%;
+            right:1%;
+            background-color: white;
+            box-shadow: 0px 0px 0.5em #555;
+            height: auto;
+            width:160px;
+            border-radius:5px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding:0.25em;
+            padding:0.5rem;
+        }
+
+        .info-toggler {
+            position: absolute;
+            top:2%;
+            right: 5%;
+            width:15px;
+            height: 15px;
+            color:#555;
+            cursor: pointer;
+            /* background-color: #555; */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1rem;
+        }
+
+        .info-item {
+            justify-content: space-between;
+            margin-top: 0.25rem;
+        }
+
+
+        .d-flex {
+            display: flex;
+        }
+
+        .text-muted {
+            color:#555;
+        }
+        
+        .text-danger {
+            color:red;
+        }
+
+        .btn {
+            font-size: 0.6rem;
+            padding:0.25rem;
+            background-color: rgb(27, 223, 164);
+            color:black;
+            border: 0px;
+            box-shadow: 2px 0 0.2em #000;
+            margin:0.5rem 0 0;
+        }
+        
+        .item-info {
+            border: 1px solid #000;
+            border-radius: 5px;
+            background-color: #555;
+        }
+
+        .item-info .item-body {
+            padding:0.25rem;
+            font-size: 0.68rem;
+        }
+
+        .item-body { 
+            background-color: white;
+        }
+
+        .item-body > div {
+            margin:0.1rem 0;
+        }
+
+        .item-info .item-footer {
+            color:white;
+            padding:0.5rem 0.25rem;
+        }
+
+        .item-footer > div {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .collapse-section {
+            height: auto;
+            margin: 0.5em 0;
+        }
+
+        .collapse-header{
+            margin:0.5em 0;
+            font-size: 0.75rem;
+            cursor:pointer;
+            padding:0.1rem;
+        }
+
+        .collapse-header:hover {
+            background-color: #ddd;
+        }
+
+        .collapse-body {
+            height: 120px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .collapse-body.open {
+            display: block !important;
+        }
+
+        .collapse-entry {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color:#ddd;
+            border-bottom: 1px solid fuchsia;
+            padding:0.1em;
+            font-size: 0.68rem;
+        }
+        
+        .use-entry {
+            display: flex;
+            align-items: center;
+        }
+
+        .use-entry .circle {
+            width:2px;
+            height: 2px;
+            padding:0.5em;
+            border-radius: 50%;
+            background-color: pink;
+            margin: 0.25rem;
+        }
+
+        .footer-section {
+            font-size: 0.65rem;
+            font-style: italic;
+        }
+
+        #clear-selection {
+            cursor: pointer;
+            margin:0.25rem 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="map" id="map"></div>
+        <div class="selection-control">
+
+            <div class="info-toggler">
+                <i class="fa fa-expand-alt"></i>
+            </div>
+            <div class="info-item">
+                <span>
+                    <i class="fa fa-map-marked"></i>
+                </span>
+                Selection Info
+            </div>
+
+            <div class="d-flex info-item">
+                <div>
+                    <span>
+                        <i class="fa fa-layer-group"></i>
+                    </span>
+                    Tiles Selected
+                </div>
+                <div id="count-div">0/750</div>
+            </div>
+
+            <div class="info-item text-muted" id="clear-selection">
+                <span>
+                    <i class="fa fa-trash"></i>
+                </span>
+                CLEAR SELECTION
+            </div>
+
+            <div class="selected-grid">
+                <div class="item-info">
+                    <div class="item-body">
+                        <div class="bold">Mountain View</div>    
+                        <div class="address text-muted">Mountain View, California ...</div>    
+                        <div class="coordinates text-muted">-122.0859, 37.428115</div>                
+                    </div>
+                    <div class="item-footer">
+                        <div class="d-flex">
+                            <div>PRICE PER TILE</div>
+                            <div>$ 59.909</div>
+                        </div>
+
+                        <div class="d-flex">
+                            <div>TOTAL</div>
+                            <div id="total-price">$ 59.909</div>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn btn-sm">DETAILS</button>
+            </div>
+
+            <div class="collapse-section">
+                <div class="collapse-header" id="toggle-collapse">
+                    <span>&downarrow;</span>
+                    Available Resources* <small class="text-muted">[hide]</small>
+                </div>
+
+                <div class="collapse-body open" id="collapse-container">
+                    <div class="collapse-entry">
+                        <div class="use-entry">
+                            <div class="circle"></div>
+                            FreshWater
+                        </div>
+                        <div class="dot">
+                            &dot;
+                        </div>
+                    </div>
+                    <div class="collapse-entry">
+                        <div class="use-entry">
+                            <div class="circle"></div>
+                            Wood
+                        </div>
+                        <div class="dot">
+                            &dot;
+                        </div>
+                    </div>
+                    <div class="collapse-entry">
+                        <div class="use-entry">
+                            <div class="circle"></div>
+                            Iron Ore
+                        </div>
+
+                        <div class="dot">
+                            &dot;
+                        </div>
+                    </div>
+                    <div class="collapse-entry">
+                        <div class="use-entry">
+                            <div class="circle"></div>
+                            Gold
+                        </div>
+                        <div class="dot">
+                            &dot;
+                        </div>
+                    </div>
+                    <div class="collapse-entry">
+                        <div class="use-entry">
+                            <div class="circle"></div>
+                            Limestone
+                        </div>
+                        <div class="dot">
+                            &dot;
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="footer-section text-muted">
+                *Values not currently available
+            </div>
+        </div>
+    </div>
+
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.3.1/mapbox-gl.js"></script>
+    <script src="main.js"></script>
+</body>
+</html>
