@@ -47,7 +47,7 @@ map.on('load', function(e) {
         type:'line',
         paint:{
             'line-color':'#000',
-            'line-width':2
+            'line-width':1
         }
     });
 
@@ -82,44 +82,103 @@ map.on('load', function(e) {
         }
     });
 
+    // selected grid layer
+    map.addSource('bbox', {
+        type:'geojson',
+        data:{"type":"FeatureCollection", "features":[]}
+    });
+
+    map.addLayer({
+        id:'bbox-layer',
+        source:'bbox',
+        type:'fill',
+        paint:{
+            'fill-color':'red',
+            'fill-opacity':0.0
+        }
+    });
 
     // map events
     map.on('click', "grid-polygon", function(e) {
         console.log(e.features);
         if(e.features[0]) {
             let feature = e.features[0];
+            updateSelection(feature);
 
-            // check if the grid id selected
             let isSelected = gridLayer.isSelected(feature);
 
-            if(isSelected) {
-                // unselect the grid 
-                gridLayer.unSelectGrid(feature);                
-            } else  {
+            if(!isSelected) {
                 // add to selection
                 gridLayer.updateGrids(feature);
+            } else {
+                gridLayer.unSelectGrid(feature);
             }
 
-            // get grids
-            let features = gridLayer.getSelectedGrid();
-            let geojson = gridLayer.getGeojson();
-
-            // update the selected grid source
-            map.getSource('selected-grid').setData(geojson);
-
-            // update the selection control
-            updateSelectionCount(features);
-            updateCollapseItems(features);
+            updateSelection();
         }
 
     });
 
+    map.on('mousemove', "grid-polygon", function(e) {
+        // console.log(e);
+        if (e.shiftKey) {
+            /*shift is down*/
+            console.log("Shift is pressed");
+        }
+
+        if(pressedKeys['16'] && e.features.length > 0) {
+            let feature = e.features[0];
+            console.log("Mouse move features");
+            console.log(mousemoveFeatures);
+
+            let moveFeature = mousemoveFeatures.find(mfeature => mfeature.properties.id == feature.properties.id);
+            if(!moveFeature) {
+                mousemoveFeatures.push(feature);
+            }
+            
+
+            let fc = turf.featureCollection(mousemoveFeatures);
+            var bbox = turf.bbox(fc);
+            console.log(bbox);
+
+            let bboxPoly = turf.bboxPolygon(bbox);
+
+           
+            map.getSource('bbox').setData(bboxPoly);
+
+            let sw = map.project(bbox.slice(2,));
+            let ne =  map.project(bbox.slice(0,2));
+
+            let queryFeatures = map.queryRenderedFeatures(
+                [sw, ne],
+                {layers: ['grid-polygon']}
+            );
+
+            console.log(queryFeatures);
+
+            queryFeatures.forEach(qFeature => {
+                // check if the grid id selected
+                let isSelected = gridLayer.isSelected(qFeature);
+                let isWithin = turf.booleanWithin(qFeature, bboxPoly);
+
+                if(!isSelected && isWithin) {
+                    // add to selection
+                    gridLayer.updateGrids(qFeature);
+
+                    updateSelection();
+                }
+ 
+            });
+           
+            
+        }
+    });
 
 
     map.on('mouseover', 'selected-grid-layer', function(e) {
         // update the 
         map.getCanvas().style.cursor = "pointer";
-    });
+    }); 
 
     map.on('mouseout', 'selected-grid-layer', function(e) {
         map.getCanvas().style.cursor = "";
@@ -136,6 +195,20 @@ map.on('load', function(e) {
     });
 });
 
+
+var pressedKeys = {};
+var mousemoveFeatures = [];
+window.onkeyup = function(e) { 
+    pressedKeys[e.keyCode] = false; 
+    // console.log(pressedKeys);
+    if(e.keyCode == 16) {
+        mousemoveFeatures = [];
+    }
+}
+window.onkeydown = function(e) { 
+    pressedKeys[e.keyCode] = true; 
+    // console.log(pressedKeys);
+}
 
 var GridLayer = function() {
     this.selectedGrids = [];
@@ -182,6 +255,18 @@ var GridLayer = function() {
 
 let gridLayer = new GridLayer();
 
+function updateSelection() {
+    // get grids
+    let features = gridLayer.getSelectedGrid();
+    let geojson = gridLayer.getGeojson();
+
+    // update the selected grid source
+    map.getSource('selected-grid').setData(geojson);
+
+    // update the selection control
+    updateSelectionCount(features);
+    updateCollapseItems(features);
+}
 
 function updateCollapseItems(features) {
     // update the total price
@@ -215,6 +300,7 @@ clearSelection.onclick = function(e) {
 
      // update the selected grid source
      map.getSource('selected-grid').setData(geojson);
+     map.getSource('bbox').setData(turf.featureCollection([]));
 
      // update the selection control
      updateSelectionCount(features);
